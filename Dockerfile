@@ -31,7 +31,6 @@ COPY bin /home/ascbot/bin
 COPY external-scripts.json /home/ascbot/
 COPY package.json /home/ascbot/
 COPY Procfile /home/ascbot/
-COPY scripts /home/ascbot/scripts
 
 RUN chmod 777 /srv
 
@@ -40,4 +39,7 @@ USER ascbot
 WORKDIR /home/ascbot
 
 RUN npm install
+
+COPY scripts /home/ascbot/scripts
+
 CMD ./bin/hubot -a slack -n ascbot
