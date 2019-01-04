@@ -79,9 +79,10 @@ You can review `external-scripts.json` to see what is included by default.
 ##  Persistence
 
 ascbot uses a flat json file for the data storage of the hubot-brain. This
-file is stored in the `/srv` directory in the docker container. This path
-should be bound to a volume on the docker host in order to ensure the data
-survives further deployments of ascbot.
+file is expected to be stored in the `/srv` directory in the docker
+container. In order to set this path the `HUBOT_BRAIN_DIR` must be set to the
+`/srv` path. This path should then be bound to a volume on the docker host in
+order to ensure the data survives further deployments of ascbot.
 
 
 ## Adapters
@@ -105,6 +106,7 @@ order to enable ascbot to connect to the slack workspace.
     % git push heroku master
     % sudo docker run -d \
           --name ascbot \
+          -e HUBOT_BRAIN_DIR=/srv \
           -e HUBOT_SLACK_TOKEN=xoxb-<your-token> \
           --volume "/local/docker/ascbot/config:/srv" \
           myuser/ascbot
