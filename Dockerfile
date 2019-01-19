@@ -28,8 +28,8 @@ RUN apt-get install cowsay
 RUN adduser --disabled-password --gecos "" ascbot
 
 COPY bin /home/ascbot/bin
-COPY external-scripts.json /home/ascbot/
-COPY package.json /home/ascbot/
+COPY --chown=ascbot:ascbot external-scripts.json /home/ascbot/
+COPY --chown=ascbot:ascbot package.json /home/ascbot/
 COPY Procfile /home/ascbot/
 
 RUN chmod 777 /srv
@@ -40,6 +40,6 @@ WORKDIR /home/ascbot
 
 RUN npm install
 
-COPY scripts /home/ascbot/scripts
+COPY --chown=ascbot:ascbot scripts /home/ascbot/scripts
 
 CMD ./bin/hubot -a slack -n ascbot
