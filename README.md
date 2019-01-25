@@ -97,10 +97,14 @@ with the adapter.
 
 ascbot includes a `Dockerfile` for building a docker image able to run it.
 This image can then be used to run a docker container to complete the
-deployment. A local volume for the should be bound to the `/srv` path in order
-to ensure that the `hubot-brain.json` file has persistant storage. A slack
-"Bot User OAuth Access Token" needs to be passed as an environment variable in
-order to enable ascbot to connect to the slack workspace.
+deployment.
+
+* A local volume for the should be bound to the `/srv` path in order
+to ensure that the `hubot-brain.json` file has persistant storage.
+* A slack "Bot User OAuth Access Token" needs to be passed as an environment
+variable in order to enable ascbot to connect to the slack workspace.
+* A github token needs to be passed as an environment variable in order to
+enable ascbot to perform operations via the github api.
 
     % sudo docker build -t myuser/ascbot .
     % git push heroku master
@@ -108,5 +112,6 @@ order to enable ascbot to connect to the slack workspace.
           --name ascbot \
           -e HUBOT_BRAIN_DIR=/srv \
           -e HUBOT_SLACK_TOKEN=xoxb-<your-token> \
+          -e HUBOT_GITHUB_TOKEN=<your-token> \
           --volume "/local/docker/ascbot/config:/srv" \
           myuser/ascbot
