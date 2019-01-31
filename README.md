@@ -19,7 +19,8 @@ upon have been set.
 
 You can start ascbot locally by running:
 
-    % bin/hubot
+    % HUBOT_GITHUB_TOKEN=<your-token> ./bin/hubot -a shell
+
 
 You'll see some start up output and a prompt:
 
@@ -92,22 +93,45 @@ with the adapter.
 
     % bin/hubot -a slack
 
+## GitHub
+
+ascbot git and GitHub operations on behalf of the user.  This functionality
+requires that the `rpc-automation` GitHub user be added as a collaborator to
+any repository that expects ascbot to interact with it.
+
+ascbot uses the GitHub API to perform operations on GitHub repositories as
+necessary.  This requires that the `HUBOT_GITHUB_TOKEN` environment variable
+be set to a valid token that has access to the GitHub API.
+
+ascbot also performs git commits on behalf of the user.  This functionality
+requires that the private SSH key for the `rpc-automation` GitHub user be
+added to the ascbot user when the docker container is built.  This is done by
+defining `SSH_PRIVATE_KEY` as a `--build-arg` when `docker build` is executed.
+The value of this argument will be set as the contents of the ssh key for the
+ascbot user on the docker container.  This value needs to be enclosed in
+double quotes to ensure that the contents of the key are not misinterpreted as
+command line arguments.  An example of the build command is shown in the
+[Deployment](#deployment) section of this README.
 
 ## Deployment
 
 ascbot includes a `Dockerfile` for building a docker image able to run it.
+The Dockerfile requires that a build argument be set for `SSH_PRIVATE_KEY`.
+This key is required in order to authenticate the `rpc-automation` user to
+GitHub for the purpose of creating git commits.
+
 This image can then be used to run a docker container to complete the
 deployment.
 
 * A local volume for the should be bound to the `/srv` path in order
-to ensure that the `hubot-brain.json` file has persistant storage.
+to ensure that the `hubot-brain.json` file has persistent storage.
 * A slack "Bot User OAuth Access Token" needs to be passed as an environment
 variable in order to enable ascbot to connect to the slack workspace.
-* A github token needs to be passed as an environment variable in order to
-enable ascbot to perform operations via the github api.
+* A GitHub token needs to be passed as an environment variable in order to
+enable ascbot to perform operations via the GitHub API.
 
-    % sudo docker build -t myuser/ascbot .
-    % git push heroku master
+    % sudo docker build --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" \
+          -t myuser/ascbot .
     % sudo docker run -d \
           --name ascbot \
           -e HUBOT_BRAIN_DIR=/srv \
