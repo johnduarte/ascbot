@@ -40,6 +40,21 @@ WORKDIR /home/ascbot
 
 RUN npm install
 
+# add credentials on build
+ARG SSH_PRIVATE_KEY
+RUN mkdir ~/.ssh/
+RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+
+# make sure your domain is accepted
+RUN touch ~/.ssh/known_hosts
+RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+RUN chmod 700 ~/.ssh/id_rsa
+RUN chmod 600 ~/.ssh/*
+
+RUN git config --global user.email "rpc-automation@rackspace.com"
+RUN git config --global user.name "rpc-automation"
+
 COPY --chown=ascbot:ascbot scripts /home/ascbot/scripts
 
-CMD ./bin/hubot -a slack -n ascbot
+CMD ./bin/hubot --alias ! -a slack -n ascbot

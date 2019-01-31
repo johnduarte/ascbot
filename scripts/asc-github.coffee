@@ -8,11 +8,13 @@
 #   HUBOT_GITHUB_TOKEN
 #
 # Commands:
-#   hubot github update sha <repo> <branch>
+#   hubot github update submodule <repo> <branch>
 #   hubot github merge pr <repo> <number>
 #   hubot github list prs <repo>
 
 module.exports = (robot) ->
+
+  authorized_rooms = [ 'G8C8VJAHM' ]
 
   github = require('githubot')(robot)
   owner = 'rcbops'
@@ -20,30 +22,36 @@ module.exports = (robot) ->
   unless (url_api_base = process.env.HUBOT_GITHUB_API)?
     url_api_base = 'https://api.github.com'
 
-  robot.respond /github update sha(s)? (.*)$/i, (msg) ->
-    [repo, branch] = msg.match[2].toLowerCase().split(' ')
-    repo = "rpc-openstack-system-tests" if repo in ["system-tests","sys-tests"]
-    # err if repo or branch not set
-    #
-    # github.branches "#{repo}", (branches) ->
-    #   err if branch not in branches
-    #
-    # create update-branch (api)
-    # clone repo (local)
-    # perform submodule update (local)
-    # commit update (local)
-    # push branch (local)
-    # open pr (api)
-    msg.send "You supplied repo: #{repo} and branch: #{branch}."
-    msg.send "This feature is under development. Please try again later."
+  robot.respond /github update submodule(s)? (.*)$/i, (msg) ->
+    if msg.message.room in authorized_rooms
+      [repo, branch] = msg.match[2].toLowerCase().split(' ')
+      @exec = require('child_process').exec
+      cmd =  "/home/ascbot/scripts/update-submodule.sh -o #{owner} -r #{repo} -b #{branch}"
+      msg.send "Creating topic branch with update..."
+      @exec cmd, (error, stdout, stderr) ->
+        if error
+          msg.send "Error: #{error} - #{stderr}"
+        else
+          msg.send "Creating PR for update..."
+          github.handleErrors (response) ->
+            msg.send "Error: #{response.statusCode} #{response.error} #{response.body}"
+          topic = stdout.trim()
+          index = topic.lastIndexOf '\n'
+          topic = topic.substr index+1
+          data = { title: "MAINT - Update submodule SHAs", head: "#{topic}", base: "#{branch}" }
+          github.post "repos/#{owner}/#{repo}/pulls", data, (pr) ->
+            msg.send pr.html_url
+    else
+      msg.send "Sorry, this action is not permitted in this room."
+
 
   robot.respond /github merge pr (.*)/i, (msg) ->
     [repo, pr_number] = msg.match[1].toLowerCase().split(' ')
     github.put "repos/#{owner}/#{repo}/pulls/#{pr_number}/merge", {}, (merge) ->
-      console.log merge.message
+      msg.send merge.message
 
-  robot.respond /github list prs (.*)/i, (msg) ->
-    repo = msg.match[1].toLowerCase()
+  robot.respond /github list pr(s)? (.*)/i, (msg) ->
+    repo = msg.match[2].toLowerCase()
     github.get "repos/#{owner}/#{repo}/pulls", {}, (pulls) ->
       if pulls.length == 0
         summary = "Achievment unlocked: no open pull requests!"
