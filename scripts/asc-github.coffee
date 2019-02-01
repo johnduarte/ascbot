@@ -9,6 +9,7 @@
 #
 # Commands:
 #   hubot github update submodule <repo> <branch>
+#   hubot github merge branch <repo> <source-branch> <target-branch>
 #   hubot github merge pr <repo> <number>
 #   hubot github list prs <repo>
 
@@ -60,3 +61,13 @@ module.exports = (robot) ->
         for pull in pulls
           summary += "\n\t#{pull.title} - #{pull.user.login}: #{pull.html_url}"
       msg.send summary
+
+  robot.respond /github merge branch (.*)$/i, (msg) ->
+    if msg.message.room in authorized_rooms
+      github.handleErrors (response) ->
+        msg.send "Error: #{response.statusCode} #{response.error} #{response.body}"
+      [repo, source, target] = msg.match[1].toLowerCase().split(' ')
+      github.branches( "#{owner}/#{repo}" ).merge "#{source}", into: "#{target}", (mergeCommit) ->
+        msg.send mergeCommit.message
+    else
+      msg.send "Sorry, this action is not permitted in this room."
