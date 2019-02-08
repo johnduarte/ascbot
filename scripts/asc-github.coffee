@@ -50,6 +50,10 @@ module.exports = (robot) ->
     [repo, pr_number] = msg.match[1].toLowerCase().split(' ')
     github.put "repos/#{owner}/#{repo}/pulls/#{pr_number}/merge", {}, (merge) ->
       msg.send merge.message
+      github.get "repos/#{owner}/#{repo}/pulls/#{pr_number}", {}, (pull) ->
+        if pull.merged
+          github.branches( "#{owner}/#{repo}" ).delete "#{pull.head.ref}", ->
+            msg.send "Deleted #{pull.head.ref} branch."
 
   robot.respond /github list pr(s)? (.*)/i, (msg) ->
     repo = msg.match[2].toLowerCase()
